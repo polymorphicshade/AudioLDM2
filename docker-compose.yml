@@ -1,0 +1,45 @@
+services:
+
+  # AudioLDM2
+  audioldm2:
+    container_name: "audioldm2"
+    build:
+     context: .
+     dockerfile: Dockerfile
+    command: ["python3", "app.py"]
+    ports:
+      - 7860:7860
+    environment:
+      - GRADIO_ROOT_PATH=/${AUDIOLDM2_ROUTE_NAME}
+      - GRADIO_SERVER_NAME=0.0.0.0
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    volumes:
+      - ./gradio_cached_examples:/app/AudioLDM2/gradio_cached_examples
+    runtime: nvidia
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['0']
+              capabilities: [gpu]
+
+  # Nginx
+  nginx:
+    image: nginx:latest
+    container_name: "nginx"
+    ports:
+      - 443:443
+    environment:
+      - AUDIOLDM2_ROUTE_NAME=${AUDIOLDM2_ROUTE_NAME}
+      - AUDIOLDM2_URL=http://audioldm2:7860/
+    volumes:
+      - ./nginx/nginx.conf.template:/etc/nginx/templates/nginx.conf.template
+      - ./nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      audioldm2:
+        condition: service_started
+    user: 0:0
+    restart: unless-stopped
