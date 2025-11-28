@@ -5,7 +5,7 @@ huggingface_hub
 torchaudio>=0.13.0
 torchvision>=0.14.0
 tqdm
-gradio<4
+gradio
 pyyaml
 einops
 chardet
@@ -21,3 +21,4 @@ transformers==4.30.2
 progressbar
 ftfy
 timm
+matplotlib
